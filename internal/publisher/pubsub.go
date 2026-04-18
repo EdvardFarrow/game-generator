@@ -7,13 +7,13 @@ import (
 	"log"
 	"time"
 
-	"cloud.google.com/go/pubsub"
-	"github.com/EdvardFarrow/game-generator/internal/models" 
+	pubsub "cloud.google.com/go/pubsub/v2"
+	"github.com/EdvardFarrow/game-generator/internal/models"
 )
 
 type GameEventPublisher struct {
 	client *pubsub.Client
-	topic  *pubsub.Topic
+	topic  *pubsub.Publisher
 }
 
 func NewPublisher(projectID, topicID string) (*GameEventPublisher, error) {
@@ -23,7 +23,7 @@ func NewPublisher(projectID, topicID string) (*GameEventPublisher, error) {
 		return nil, fmt.Errorf("ошибка создания клиента Pub/Sub: %v", err)
 	}
 
-	topic := client.Topic(topicID)
+	topic := client.Publisher(topicID)
 
 	topic.PublishSettings.ByteThreshold = 1e6              // 1MB
 	topic.PublishSettings.CountThreshold = 1000            
