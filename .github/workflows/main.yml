@@ -19,13 +19,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.0' 
+          go-version: '1.25' 
 
-      - name: Run golangci-lint (Go)
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: latest
-          working-directory: . 
+      - name: Install and run golangci-lint (Go)
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          golangci-lint run ./...
 
       - name: Set up Python
         uses: actions/setup-python@v5
