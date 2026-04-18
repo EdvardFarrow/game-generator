@@ -1,4 +1,3 @@
-import pytest
 from airflow.models import DagBag
 
 def test_dag_bag_import():
