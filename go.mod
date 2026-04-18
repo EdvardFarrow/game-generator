@@ -1,6 +1,6 @@
 module github.com/EdvardFarrow/game-generator
 
-go 1.26.2
+go 1.24.0
 
 require (
 	cloud.google.com/go v0.123.0 // indirect
