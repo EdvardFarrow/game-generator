@@ -1,7 +1,6 @@
 from airflow import DAG
-from airflow.operators.bash import BashOperator
-from airflow.utils.dates import days_ago
-from datetime import timedelta
+from airflow.providers.standard.operators.bash import BashOperator
+from datetime import timedelta, datetime
 
 default_args = {
     'owner': 'airflow',
@@ -15,8 +14,8 @@ with DAG(
     'game_analytics_full_cycle',
     default_args=default_args,
     description='Запуск цикла трансформации данных из Bronze в Gold',
-    schedule_interval='@hourly', 
-    start_date=days_ago(1),
+    schedule='@hourly', 
+    start_date=datetime(2026, 4, 1),
     catchup=False,
 ) as dag:
 
