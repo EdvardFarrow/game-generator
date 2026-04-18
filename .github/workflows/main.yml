@@ -1,0 +1,83 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.2' 
+
+      - name: Run golangci-lint (Go)
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          working-directory: . 
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies via uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          uv venv
+          source .venv/bin/activate
+          uv pip install ruff pytest apache-airflow sqlfluff dbt-bigquery
+
+      - name: Run Ruff (Python Linter)
+        run: |
+          source .venv/bin/activate
+          ruff check dags/ tests/
+
+      - name: Run SQLFluff (SQL Linter)
+        run: |
+          source .venv/bin/activate
+          sqlfluff lint casual_game_dbt/models/ --dialect bigquery
+
+      - name: Run DAG Integrity Tests (Pytest)
+        run: |
+          source .venv/bin/activate
+          pytest tests/test_dag_integrity.py
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Upload DAGs to GCS
+        uses: google-github-actions/upload-cloud-storage@v2
+        with:
+          path: dags/
+          destination: ${{ secrets.COMPOSER_DAG_BUCKET }}/dags/
+
+      - name: Upload dbt project to GCS
+        uses: google-github-actions/upload-cloud-storage@v2
+        with:
+          path: casual_game_dbt/
+          destination: ${{ secrets.COMPOSER_DAG_BUCKET }}/dbt/

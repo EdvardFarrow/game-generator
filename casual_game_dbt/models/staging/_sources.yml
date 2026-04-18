@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: raw_events
+    database: soundchain-2 
+    schema: game_analytics
+    tables:
+      - name: events_raw_ext # Таблица, которую создал Terraform
