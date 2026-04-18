@@ -9,7 +9,7 @@
 WITH daily_sessions AS (
     SELECT
         DATE(event_time) AS event_date,
-        COUNT(DISTINCT user_id) AS dau, -- Daily Active Users
+        COUNT(DISTINCT user_id) AS dau,
         COUNT(event_id) AS total_sessions
     FROM {{ ref('stg_game_sessions') }}
     GROUP BY 1
@@ -18,8 +18,12 @@ WITH daily_sessions AS (
 daily_economy AS (
     SELECT
         DATE(event_time) AS event_date,
-        SUM(CASE WHEN currency = 'hard_gem' THEN amount ELSE 0 END) AS hard_currency_spent,
-        SUM(CASE WHEN currency = 'soft_coin' THEN amount ELSE 0 END) AS soft_currency_spent,
+        SUM(
+            CASE WHEN currency = 'hard_gem' THEN amount ELSE 0 END
+        ) AS hard_currency_spent,
+        SUM(
+            CASE WHEN currency = 'soft_coin' THEN amount ELSE 0 END
+        ) AS soft_currency_spent,
         COUNT(event_id) AS total_transactions
     FROM {{ ref('stg_game_economy') }}
     GROUP BY 1
@@ -32,6 +36,6 @@ SELECT
     COALESCE(e.hard_currency_spent, 0) AS hard_currency_spent,
     COALESCE(e.soft_currency_spent, 0) AS soft_currency_spent,
     COALESCE(e.total_transactions, 0) AS total_transactions
-FROM daily_sessions s
-FULL OUTER JOIN daily_economy e 
+FROM daily_sessions AS s
+FULL OUTER JOIN daily_economy AS e
     ON s.event_date = e.event_date
